@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Diffusion.Diffusion Weighted Images</category>
+  <title>Joint anisotropic LMMSE for DWI denoising</title>
+  <description><![CDATA[This module is a reimplementation of the older 'DWI Joint Rician LMMSE Filter'. There are two main differences with this former approach:\n   1) Instead of computing sample moments inside isotropic neighborhoods, we use a non-local means-like scheme to average only those voxels silmilar enough to the central voxel. This similarity is based on three RGB channels corresponding to the projections of the DWI data set in three mutually orthogonal spatial directions.\n   2) The standard deviation of noise in the complex domain, sigma, is estimated here as the mode of the histogram of the (corrected) local variances in the signal area, which is a more robust estimation procedure.\n This module reduces Rician noise on a set of diffusion weighted images. For this, it filters the image in the mean squared error sense using a Rician noise model. The N closest gradient directions to the direction being processed are filtered together to improve the results: the noise-free signal is seen as an n-dimensional vector which has to be estimated with the LMMSE method from a set of corrupted measurements. To that end, the covariance matrix of the noise-free vector and the cross covariance between this signal and the noise have to be estimated, which is done taking into account the image formation process. All the estimations are performed as sample estimates in a 'shaped neighborhood' defined by the weights extracted from the structural similarity of the voxels.\nA complete description of the isotropic algorithm may be found in:\nAntonio Tristan-Vega and Santiago Aja-Fernandez, 'DWI filtering using joint information for DTI and HARDI', Medical Image Analysis, Volume 14, Issue 2, Pages 205-218. 2010.\nThe anisotropic method is further described in:\nAntonio Tristan-Vega, Veronique Brion, Gonzalo Vegas-Sanchez-Ferrero, and Santiago Aja-Fernandez, 'Merging squared-magnitude approaches to DWI denoising: An adaptive Wiener filter tuned to the anatomical contents of the image', In Proceedings of IEEE EMBC 2013.]]></description>
+  <version>0.1.1.$Revision: 1 $(alpha)</version>
+  <documentation-url>http://wiki.slicer.org/slicerWiki/index.php/Documentation/4.1/Modules/JointRicianLMMSEImageFilter</documentation-url>
+  <license/>
+  <contributor>Antonio Tristan Vega (University of Valladolid, Spain)</contributor>
+  <acknowledgements><![CDATA[Work partially funded by grant numbers TEC2010-17982 from the Ministerio de Ciencia y Educacion (Spain) and VA376A11-2, SAN103/VA40/1 from the Junta de Castilla y Leon (Spain).]]></acknowledgements>
+  <parameters>
+    <label>Basic parameters of the algorithm</label>
+    <description><![CDATA[Parameters for Joint Rician LMMSE image filter]]></description>
+    <integer-vector>
+      <name>iRadiusFiltering</name>
+      <label>Filtering Radius</label>
+      <longflag>--rf</longflag>
+      <description><![CDATA[Filtering radius. The algorithm searchs for similar voxels inside a 3-D neighborhood with this radius, and uses this sample to estimate the noise-free value. Since only similar voxels are used, larger radii do not necessarily produce over-blurring, but computations will take longer.]]></description>
+      <default>4,4,4</default>
+    </integer-vector>
+    <float>
+      <name>iH</name>
+      <label>Smoothing parameter</label>
+      <longflag>--h</longflag>
+      <description><![CDATA[This parameter should be in the range 1-5 for optimum performance: larger values produce a more agressive denoising. Smaller values better preserve the details. When h is infinity (i.e. a very large number), we have the old isotropic jLMMSE, and a smaller filtering radius should be chosen to avoid over-blurring.]]></description>
+      <default>2.0</default>
+      <constraints>
+        <minimum>0.1</minimum>
+        <step>0.1</step>
+      </constraints>
+    </float>
+    <integer>
+      <name>iNumNeighbors</name>
+      <label>Number of neighboring gradients</label>
+      <longflag>--ng</longflag>
+      <description><![CDATA[The number of the closest gradients that are used to jointly filter a given gradient direction (0 to use all). Using all the gradients is faster (and typically provides better results) than taking a subset.]]></description>
+      <default>0</default>
+      <constraints>
+        <minimum>0</minimum>
+        <step>1</step>
+      </constraints>
+    </integer>
+  </parameters>
+  <parameters advanced="true">
+    <label>Advanced parameters of the algorithm</label>
+    <description><![CDATA[Advanced parameters to be used with the filter]]></description>
+    <integer-vector>
+      <name>iRadiusFeatures</name>
+      <label>Features Radius</label>
+      <longflag>--rfeat</longflag>
+      <description><![CDATA[To assess the similarity between two pixels in the filtering neighborhood, we average the similarities in three channels RGB corresponding to projections of the data set in the corresponding axes 'x', 'y', and 'z'. For each channel, we compute the local mean value and local directional derivatives inside a neighborhood with this 'Features Radius'. The similarity is finally computed as the distance in this features space (mean value and derivatives).]]></description>
+      <default>1,1,1</default>
+    </integer-vector>
+    <boolean>
+      <name>compressOutput</name>
+      <longflag>--compressOutput</longflag>
+      <description><![CDATA[Compress the data in the output file using gzip]]></description>
+      <label>Compress output data</label>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>setZeroBck</name>
+      <longflag>--setZeroBck</longflag>
+      <description><![CDATA[Useful only when a mask is used. When set, background voxels (those outside of the mask) are set to 0 instead of preserving their original value]]></description>
+      <label>Set backg. voxels to 0</label>
+      <default>true</default>
+    </boolean>
+    <boolean>
+      <name>onlyUNLM</name>
+      <longflag>--onlyUNLM</longflag>
+      <description><![CDATA[If this flag is set, the filter turns out into an Unbiased Non-Local Means: the output pixel is set as the square root of the second order moment (<A^2>=<M^2>-2*sigma^2) estimated from the anisotropic neighborhood. This is faster than the original LMMSE, but the performance is also worse in terms of both noise removal and details preservattion.]]></description>
+      <label>Avoid LMMSE correction</label>
+      <default>false</default>
+    </boolean>
+  </parameters>
+  <parameters advanced="true">
+  <label>Noise estimation</label>
+    <description><![CDATA[These parameters are related to the module that estimates the power of noise]]></description>
+  <integer-vector>
+      <name>iRadiusEstimation</name>
+      <label>Estimation Radius</label>
+      <longflag>--re</longflag>
+      <description><![CDATA[The standard deviation of noise in the complex domain, sigma, is computed as the mode of the distribution of local variances of the image in those zones where the signal is actually present. These local variances are computed in a neighborhood with this 'Estimation Radius'.]]></description>
+      <default>1,1,0</default>
+    </integer-vector>
+    <boolean>
+      <name>overrideNoise</name>
+      <longflag>--overrideNoise</longflag>
+      <description><![CDATA[When this flag is selected, the noise parameter is manually introduced instead of automatically estimated. Use this flag in case you suspect the noise is not correctly estimated for your data set.]]></description>
+      <label>Override noise estimation</label>
+      <default>false</default>
+    </boolean>
+    <float>
+      <name>noiseLevel</name>
+      <longflag>--noiseLevel</longflag>
+      <description><![CDATA[This value applies only when 'Override noise estimation' is selected. It represents the standard deviation of noise, sigma, in the complex domain.]]></description>
+      <label>Manual noise level</label>
+      <default>5</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1000</maximum>
+        <step>0.1</step>
+      </constraints>
+    </float>
+  </parameters>
+  <parameters>
+    <label>IO</label>
+    <description><![CDATA[Input/output parameters]]></description>
+    <image type="diffusion-weighted">
+      <name>inputVolume</name>
+      <label>Input Volume</label>
+      <channel>input</channel>
+      <index>0</index>
+      <description><![CDATA[Input DWI volume.]]></description>
+    </image>
+    <image type="diffusion-weighted">
+      <name>outputVolume</name>
+      <label>Output Volume</label>
+      <channel>output</channel>
+      <index>1</index>
+      <description><![CDATA[Output DWI volume.]]></description>
+    </image>
+    <image type="label">
+      <name>inputMask</name>
+      <longflag>--maskImage</longflag>
+      <description><![CDATA[This is an optional binary mask to apply to the DWI. The values inside the mask are filtered, while those outside the mask either remain unaltered or are set to zero (see 'Advanced parameters of the algorithm') to save computations. The mask will not effect noise estimation]]></description>
+      <label>Input mask [Optional]</label>
+      <channel>input</channel>
+    </image>
+  </parameters>
+</executable>
