@@ -124,20 +124,22 @@ namespace itk
         // The type to store the closest gradient directions to a given one.
         typedef itk::Array2D<unsigned int> NeighboursIndType;
         /** Set and get the parameters */
-        itkSetMacro( NDWI,       unsigned int );
-        itkGetMacro( NDWI,       unsigned int );
-        itkSetMacro( NBaselines, unsigned int );
-        itkGetMacro( NBaselines, unsigned int );
-        itkSetMacro( Sigma,      float        );
-        itkGetMacro( Sigma,      float        );
-        itkSetMacro( H,          float        );
-        itkGetMacro( H,          float        );
-        itkSetMacro( Neighbours, unsigned int );
-        itkGetMacro( Neighbours, unsigned int );
-        itkSetMacro( SetZeroBck, bool         );
-        itkGetMacro( SetZeroBck, bool         );
-        itkSetMacro( OnlyUNLM,   bool         );
-        itkGetMacro( OnlyUNLM,   bool         );
+        itkSetMacro( NDWI,           unsigned int );
+        itkGetMacro( NDWI,           unsigned int );
+        itkSetMacro( NBaselines,     unsigned int );
+        itkGetMacro( NBaselines,     unsigned int );
+        itkSetMacro( Sigma,          float        );
+        itkGetMacro( Sigma,          float        );
+        itkSetMacro( H,              float        );
+        itkGetMacro( H,              float        );
+        itkSetMacro( Neighbours,     unsigned int );
+        itkGetMacro( Neighbours,     unsigned int );
+        itkSetMacro( SetZeroBck,     bool         );
+        itkGetMacro( SetZeroBck,     bool         );
+        itkSetMacro( OnlyUNLM,       bool         );
+        itkGetMacro( OnlyUNLM,       bool         );
+        itkSetMacro( FilterOutliers, bool         );
+        itkGetMacro( FilterOutliers, bool         );
         /** Add a new gradient direction: */
         void AddGradientDirection( GradientType grad )
         {
@@ -249,6 +251,11 @@ namespace itk
         // This is used when a mask is applied to the DWI input:
         LabelImagePointer m_Mask;
         bool              m_SetZeroBck;
+        // This is to tell the filter to NLM-filter (or not)
+        // those locations with very large signal variabilities,
+        // such as the background, the CSF or certain grey
+        // matter locations
+        bool              m_FilterOutliers;
         // This is to tell the filter not to apply the LMMSE
         // correction, turning out into a "simple" UNLM:
         bool              m_OnlyUNLM;

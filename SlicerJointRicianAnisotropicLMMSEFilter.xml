@@ -66,6 +66,13 @@
       <default>true</default>
     </boolean>
     <boolean>
+      <name>filterOutliers</name>
+      <longflag>--filterOutliers</longflag>
+      <description><![CDATA[When the variability inside the shaped neighborhood is very large, it is very likely that we are in a background/CSF region. The default behavior is jkeeping the original value at these locations. If this flag is set, the default is replaced by the local raw UNLM average.]]></description>
+      <label>UNLM-filter outliers</label>
+      <default>false</default>
+    </boolean>
+    <boolean>
       <name>onlyUNLM</name>
       <longflag>--onlyUNLM</longflag>
       <description><![CDATA[If this flag is set, the filter turns out into an Unbiased Non-Local Means: the output pixel is set as the square root of the second order moment (<A^2>=<M^2>-2*sigma^2) estimated from the anisotropic neighborhood. This is faster than the original LMMSE, but the performance is also worse in terms of both noise removal and details preservattion.]]></description>

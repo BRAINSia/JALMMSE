@@ -38,23 +38,24 @@ namespace itk
         m_Radius.Fill(1);
         m_RadiusFeatures.Fill(1);
         
-        m_NDWI          = 0;
-        m_NBaselines    = 0;
-        m_DWI           = IndicatorType( 0 );
-        m_Baselines     = IndicatorType( 0 );
+        m_NDWI           = 0;
+        m_NBaselines     = 0;
+        m_DWI            = IndicatorType( 0 );
+        m_Baselines      = IndicatorType( 0 );
         
-        m_Sigma         = 20.0f;
-        m_H             = 1.2;
-        m_SigmaR        = 0;
-        m_SigmaG        = 0;
-        m_SigmaB        = 0;
+        m_Sigma          = 20.0f;
+        m_H              = 1.2;
+        m_SigmaR         = 0;
+        m_SigmaG         = 0;
+        m_SigmaB         = 0;
         
-        m_SetZeroBck    = false;
-        m_OnlyUNLM      = false;
+        m_SetZeroBck     = false;
+        m_OnlyUNLM       = false;
+        m_FilterOutliers = false;
         
-        m_GradientList  = GradientListType(0);
-        m_Neighbours    = 1;    // By default, we use the gradient by gradient behaviour
-        m_NeighboursInd = NeighboursIndType(0, 0);
+        m_GradientList   = GradientListType(0);
+        m_Neighbours     = 1;    // By default, we use the gradient by gradient behaviour
+        m_NeighboursInd  = NeighboursIndType(0, 0);
         
         m_Mask      = NULL;
         m_Featuresx = NULL;
@@ -581,8 +582,14 @@ namespace itk
                 {
                     // The variability is too high, so C_M2M2 is close to singular
                     // and numerical problems could arise.
-                    for( unsigned int ch=0; ch<this->GetInput()->GetVectorLength(); ++ch )
-                        dFiltered[ch] = dSquaredMagnitude[ch];
+                    if( m_FilterOutliers ){
+                        for( unsigned int ch=0; ch<this->GetInput()->GetVectorLength(); ++ch )
+                            dFiltered[ch] = dSecondAveragedMoment[ch];
+                    }
+                    else{
+                        for( unsigned int ch=0; ch<this->GetInput()->GetVectorLength(); ++ch )
+                            dFiltered[ch] = dSquaredMagnitude[ch];
+                    }
 /** &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 // DEBUG:
 #ifdef USE_DEBUG_CODE

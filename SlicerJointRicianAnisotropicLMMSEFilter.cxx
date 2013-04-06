@@ -327,6 +327,7 @@ int DoIt( int argc, char * argv[], PixelType )
     ricianFilter->SetH( iH );
     ricianFilter->SetSetZeroBck( setZeroBck );
     ricianFilter->SetOnlyUNLM( onlyUNLM );
+    ricianFilter->SetFilterOutliers( filterOutliers );
     ricianFilter->SetRadiusFeatures( indexRadiusFeatures );
     ricianFilter->Update();
     
