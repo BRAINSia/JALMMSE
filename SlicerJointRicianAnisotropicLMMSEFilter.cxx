@@ -1,15 +1,15 @@
 /*=========================================================================
- 
+
  Program:   Diffusion Applications
  Language:  C++
  Module:    $HeadURL: http://svn.slicer.org/Slicer4/trunk/Modules/CLI/DiffusionApplications/dwiNoiseFilter/dwiNoiseFilter.cxx $
  Date:      $Date: 2008-11-25 18:46:58 +0100 (Tue, 25 Nov 2008) $
  Version:   $Revision: 7972 $
- 
+
  Copyright (c) Brigham and Women's Hospital (BWH) All Rights Reserved.
- 
+
  See License.txt or http://www.slicer.org/copyright/copyright.txt for details.
- 
+
  ==========================================================================*/
 #include <itkMetaDataObject.h>
 
@@ -20,6 +20,7 @@
 
 // DWIJointRicianLMMSEFilter includes
 #include "itkLMMSEVectorImageFilter.h"
+#include "itkImageFileReader.h"
 
 // Noise estimation includes
 #include "NoiseEstimation/itkComputeRestrictedHistogram.h"
@@ -30,67 +31,69 @@
 
 #include "SlicerJointRicianAnisotropicLMMSEFilterCLP.h"
 
-// CLI includes
-#ifdef THISISASLICERBUILD
-
-#include "itkPluginUtilities.h"
-
-#else
-
-#ifdef SLICERV4
-#include "itkPluginUtilities.h"
-#else
-#include "SlicerExecutionModel/itkPluginUtilities.h"
-#endif
-
-#endif
-
 // ITK includes
 #include <itkImageFileWriter.h>
 #include <itkNrrdImageIO.h>
 #include <itkCastImageFilter.h>
 
-#define DIMENSION 3
-#define dwiPI 3.141592653589793
+static const unsigned int DIMENSION=3;
 
+/* Copied locally to avoid complicated build dependancies */
+/* Origincal code taken from Slicer/Base/CLI/itkPluginUtilities.h */
+namespace JALMMSE {
+  //-----------------------------------------------------------------------------
+  /// Get the PixelType and ComponentType from fileName
+  static void GetImageType (std::string fileName,
+                     itk::ImageIOBase::IOPixelType &pixelType,
+                     itk::ImageIOBase::IOComponentType &componentType)
+    {
+      typedef itk::Image<unsigned char, 3> ImageType;
+      itk::ImageFileReader<ImageType>::Pointer imageReader = itk::ImageFileReader<ImageType>::New();
+      imageReader->SetFileName(fileName.c_str());
+      imageReader->UpdateOutputInformation();
+
+      pixelType = imageReader->GetImageIO()->GetPixelType();
+      componentType = imageReader->GetImageIO()->GetComponentType();
+    }
+}
 template <class PixelType>
 int DoIt( int argc, char * argv[], PixelType )
 {
     PARSE_ARGS;
-    
+
     // do the typedefs
-    
+
     typedef itk::VectorImage<PixelType, DIMENSION>       DiffusionImageType;
-    
+
     typedef itk::Image<PixelType, DIMENSION>             ScalarImageType;
-    
+
     typedef float                                        PixelTypeFloat;
     typedef itk::VectorImage<PixelTypeFloat, DIMENSION>  FloatDiffusionImageType;
     typedef itk::Image<PixelTypeFloat, DIMENSION>        ScalarFloatImageType;
-    
+
     typedef itk::CovariantVector<double, DIMENSION>      CovariantVectorType;
-    
+
     std::vector<CovariantVectorType> diffusionDirections;
-    
+
     typedef itk::ImageFileReader<DiffusionImageType> FileReaderType;
     typename FileReaderType::Pointer reader = FileReaderType::New();
     reader->SetFileName( inputVolume.c_str() );
     reader->Update();
-    
+
     itk::MetaDataDictionary            imgMetaDictionary = reader->GetMetaDataDictionary();
     std::vector<std::string>           imgMetaKeys = imgMetaDictionary.GetKeys();
     std::string                        metaString;
-    
+
     std::cout << "Number of keys = " << imgMetaKeys.size() << std::endl;
-    
+
     typedef itk::MetaDataDictionary DictionaryType;
     const DictionaryType & dictionary = reader->GetMetaDataDictionary();
-    
+
     typedef itk::MetaDataObject<std::string> MetaDataStringType;
-    
+
     DictionaryType::ConstIterator itr = dictionary.Begin();
     DictionaryType::ConstIterator end = dictionary.End();
-    
+
     double       dBValue = 1000;
     int          iFoundBValue = 0;
     unsigned int channels = 0;
@@ -99,16 +102,16 @@ int DoIt( int argc, char * argv[], PixelType )
         itk::MetaDataObjectBase::Pointer entry = itr->second;
         MetaDataStringType::Pointer      entryvalue =
         dynamic_cast<MetaDataStringType *>( entry.GetPointer() );
-        
+
         if( entryvalue )
         {
             ::size_t pos = itr->first.find("DWMRI_gradient");
-            
+
             if( pos != std::string::npos )
             {
                 std::string tagkey = itr->first;
                 std::string tagvalue = entryvalue->GetMetaDataObjectValue();
-                
+
                 double dx[DIMENSION];
                 std::sscanf(tagvalue.c_str(), "%lf %lf %lf\n", &dx[0], &dx[1], &dx[2]);
                 diffusionDirections.push_back( (CovariantVectorType)(dx) );
@@ -116,11 +119,11 @@ int DoIt( int argc, char * argv[], PixelType )
             }
             else
             {
-                
+
                 // try to find the b-value
-                
+
                 ::size_t posB = itr->first.find("DWMRI_b-value");
-                
+
                 if( posB != std::string::npos )
                 {
                     std::string tagvalue = entryvalue->GetMetaDataObjectValue();
@@ -133,51 +136,51 @@ int DoIt( int argc, char * argv[], PixelType )
                 }
             }
         }
-        
+
         ++itr;
     }
-    
+
     // find the first zero baseline image and use it for the noise estimation
-    
+
     ::size_t iNrOfDWIs = diffusionDirections.size();
     ::size_t iFirstBaseline = std::string::npos;
     for( ::size_t iI = 0; iI < iNrOfDWIs; iI++ )
     {
-        
+
         if( diffusionDirections[iI].GetNorm() == 0 )
         {
             iFirstBaseline = iI;
             std::cout << "First baseline found at index = " << iFirstBaseline << std::endl;
             break;
         }
-        
+
     }
-    
+
     if( iFirstBaseline == std::string::npos )
     {
-        
+
         std::cout << "Did not find an explicit baseline image." << std::endl;
         std::cout << "Treating the first volume as the baseline volume." << std::endl;
         iFirstBaseline = 0;
-        
+
     }
-    
+
     typename ScalarImageType::SizeType indexRadiusE;
     typename ScalarImageType::SizeType indexRadiusF;
     typename ScalarImageType::SizeType indexRadiusFeatures;
-    
+
     indexRadiusF[0] = iRadiusFiltering[0]; // radius along x
     indexRadiusF[1] = iRadiusFiltering[1]; // radius along y
     indexRadiusF[2] = iRadiusFiltering[2]; // radius along z
-    
+
     indexRadiusE[0] = iRadiusEstimation[0]; // radius along x
     indexRadiusE[1] = iRadiusEstimation[1]; // radius along y
     indexRadiusE[2] = iRadiusEstimation[2]; // radius along z
-    
+
     indexRadiusFeatures[0] = iRadiusFeatures[0];
     indexRadiusFeatures[1] = iRadiusFeatures[1];
     indexRadiusFeatures[2] = iRadiusFeatures[2];
-    
+
     //================================================================================
     /** In case a mask is needed, read and apply it */
     typedef itk::Image<unsigned short,DIMENSION>   LabelImageType;
@@ -202,9 +205,9 @@ int DoIt( int argc, char * argv[], PixelType )
             std::cerr << "impossible to read it. Running without mask..."    << std::endl;
         }
     }
-    
+
     //================================================================================
-    
+
     typedef itk::LMMSEVectorImageFilter<DiffusionImageType, FloatDiffusionImageType> RicianLMMSEImageFilterType;
     typename RicianLMMSEImageFilterType::Pointer ricianFilter = RicianLMMSEImageFilterType::New();
     ricianFilter->SetInput( reader->GetOutput() );
@@ -256,7 +259,7 @@ int DoIt( int argc, char * argv[], PixelType )
         iNumNeighbors = nDWI;
     }
     ricianFilter->SetNeighbours( iNumNeighbors );
-    
+
     // ======================================================================================================
     // Noise estimation is performed only if the flag "overrideNoise" IS NOT selected.
     // Otherwise, the noise level manually introduced by the user is applied
@@ -329,23 +332,23 @@ int DoIt( int argc, char * argv[], PixelType )
     ricianFilter->SetFilterOutliers( filterOutliers );
     ricianFilter->SetRadiusFeatures( indexRadiusFeatures );
     ricianFilter->Update();
-    
+
     std::cout << "number of components per pixel" << ricianFilter->GetOutput()->GetNumberOfComponentsPerPixel()
     << std::endl;
-    
+
     // now cast it back to diffusionimagetype
-    
+
     typedef itk::CastImageFilter<FloatDiffusionImageType, DiffusionImageType> CastImageFilterType;
-    
+
     typename CastImageFilterType::Pointer castImageFilter = CastImageFilterType::New();
     castImageFilter->SetInput( ricianFilter->GetOutput() );
     castImageFilter->Update();
-    
+
     itk::MetaDataDictionary metaDataDictionary;
     metaDataDictionary = reader->GetMetaDataDictionary();
     castImageFilter->GetOutput()->SetMetaDataDictionary(metaDataDictionary);
-    
-    
+
+
     // let's write it out
     typedef itk::ImageFileWriter<DiffusionImageType> WriterType;
     typename WriterType::Pointer nrrdWriter = WriterType::New();
@@ -370,27 +373,27 @@ int DoIt( int argc, char * argv[], PixelType )
         std::cerr << e << std::endl;
         return EXIT_FAILURE;
     }
-    
+
     std::cout << "success = " << EXIT_SUCCESS << std::endl;
-    
+
     return EXIT_SUCCESS;
-    
+
 }
 
 int main( int argc, char * argv[] )
 {
-    
+
     PARSE_ARGS;
-    
+
     itk::ImageIOBase::IOPixelType     pixelType;
     itk::ImageIOBase::IOComponentType componentType;
-    
+
     // try
     // {
-    itk::GetImageType(inputVolume, pixelType, componentType);
-    
+    JALMMSE::GetImageType(inputVolume, pixelType, componentType);
+
     // This filter handles all types
-    
+
     switch( componentType )
     {
 #ifndef WIN32
@@ -432,15 +435,15 @@ int main( int argc, char * argv[] )
             std::cout << "unknown component type" << std::endl;
             break;
     }
-    
+
     // }
-    
+
     /*catch( itk::ExceptionObject &excep)
      {
      std::cerr << argv[0] << ": exception caught !" << std::endl;
      std::cerr << excep << std::endl;
      return EXIT_FAILURE;
      }*/
-    
+
     return EXIT_SUCCESS;
 }
