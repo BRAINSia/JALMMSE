@@ -1,5 +1,5 @@
 /*=========================================================================
- 
+
  Program:   Insight Segmentation & Registration Toolkit
  Module:    $RCSfile: itkOtsuStatistics.txx,v $
  Language:  C++
@@ -14,9 +14,13 @@
 #include "itkImageRegionIterator.h"
 #include "vnl/vnl_math.h"
 
+#if ITK_VERSION_MAJOR < 4
+  typedef int ThreadIdType;
+#endif
+
 namespace itk
 {
-    
+
     /** Constructor */
     template <class TInputImage, class TOutputImage>
     OtsuThreshold<TInputImage, TOutputImage>::OtsuThreshold()
@@ -27,7 +31,7 @@ namespace itk
         m_Threshold = 20000.0f;
         m_W         = 2.0f;
     }
-    
+
     template <class TInputImage, class TOutputImage>
     void OtsuThreshold<TInputImage, TOutputImage>
     ::BeforeThreadedGenerateData( void )
@@ -37,15 +41,10 @@ namespace itk
         m_ThreadCount.SetSize( this->GetNumberOfThreads() );
         m_ThreadCount.Fill(0.0f);
     }
-    
+
     template <class TInputImage, class TOutputImage>
-#if ITK_VERSION_MAJOR < 4
-    void OtsuThreshold<TInputImage, TOutputImage>
-    ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, int threadId )
-#else
     void OtsuThreshold<TInputImage, TOutputImage>
     ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, ThreadIdType threadId )
-#endif
     {
         // Input and output
         InputImageConstPointer input   =  this->GetInput();
@@ -68,20 +67,20 @@ namespace itk
             it.Set( static_cast<OutputPixelType>(val) );
         }
     }
-    
+
     template <class TInputImage, class TOutputImage>
     void OtsuThreshold<TInputImage, TOutputImage>
     ::AfterThreadedGenerateData( void )
     {
         double totalSamples = itk::NumericTraits<double>::Zero;
-        
-        for( int k = 0; k < this->GetNumberOfThreads(); ++k )
+
+        for( ThreadIdType k = 0; k < this->GetNumberOfThreads(); ++k )
         {
             totalSamples += m_ThreadCount[k];
         }
         for( unsigned int b = 0; b < m_Bins; ++b )
         {
-            for( int k = 1; k < this->GetNumberOfThreads(); ++k )
+            for( ThreadIdType k = 1; k < this->GetNumberOfThreads(); ++k )
             {
                 m_ThreadHist[0][b] += m_ThreadHist[k][b];
             }
@@ -98,10 +97,10 @@ namespace itk
         double freqLeft = m_ThreadHist[0][0];
         double meanLeft = 1.0;
         double meanRight = ( totalMean - freqLeft ) / ( 1.0 - freqLeft );
-        
+
         double maxVarBetween = freqLeft * ( 1.0 - freqLeft ) * pow(  fabs(meanLeft - meanRight),   m_W   );
         int    maxBinNumber = 0;
-        
+
         double freqLeftOld = freqLeft;
         double meanLeftOld = meanLeft;
         for( unsigned int j = 1; j < m_Bins; j++ )
@@ -116,7 +115,7 @@ namespace itk
             {
                 meanRight = ( totalMean - meanLeft * freqLeft ) / ( 1.0 - freqLeft );
             }
-            
+
             double varBetween = freqLeft * ( 1.0 - freqLeft ) * pow(   fabs(meanLeft - meanRight),   m_W   );
             if( varBetween > maxVarBetween )
             {
@@ -132,7 +131,7 @@ namespace itk
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     }
-    
+
     /** Standard "PrintSelf" method */
     template <class TInputImage, class TOutput>
     void OtsuThreshold<TInputImage, TOutput>
@@ -145,7 +144,7 @@ namespace itk
         os << indent << "Bins: "                               << m_Bins                               << std::endl;
         os << indent << "Threshold: "                          << m_Threshold                          << std::endl;
     }
-    
+
 } // end namespace itk
 
 #endif

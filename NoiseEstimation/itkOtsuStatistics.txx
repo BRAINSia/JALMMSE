@@ -1,5 +1,5 @@
 /*=========================================================================
- 
+
  Program:   Insight Segmentation & Registration Toolkit
  Module:    $RCSfile: itkOtsuStatistics.txx,v $
  Language:  C++
@@ -18,9 +18,13 @@
 #include "itkOffset.h"
 #include "vnl/vnl_math.h"
 
+#if ITK_VERSION_MAJOR < 4
+    typedef int ThreadIdType;
+#endif
+
 namespace itk
 {
-    
+
     /** Constructor */
     template <class TInputImage, class TOutputImage>
     OtsuStatistics<TInputImage, TOutputImage>::OtsuStatistics()
@@ -33,7 +37,7 @@ namespace itk
         m_Indicator.SetSize(1);
         m_Indicator[0] = 0;
     }
-    
+
     /** The requested input region is larger than the corresponding output, so we need to override this method: */
     template <class TInputImage, class TOutputImage>
     void OtsuStatistics<TInputImage, TOutputImage>
@@ -42,29 +46,29 @@ namespace itk
     {
         // Call the superclass' implementation of this method
         Superclass::GenerateInputRequestedRegion();
-        
+
         // Get pointers to the input and output
         InputImagePointer  inputPtr  = const_cast<TInputImage *>( this->GetInput() );
         OutputImagePointer outputPtr = this->GetOutput();
-        
+
         if( !inputPtr || !outputPtr )
         {
             return;
         }
-        
+
         // Get a copy of the input requested region (should equal the output
         // requested region)
         InputImageRegionType inputRequestedRegion = inputPtr->GetRequestedRegion();
-        
+
         // Pad the input requested region by the operator radius
         inputRequestedRegion.PadByRadius( m_Radius );
-        
+
         // Crop the input requested region at the input's largest possible region
         inputRequestedRegion.Crop(inputPtr->GetLargestPossibleRegion() );
         inputPtr->SetRequestedRegion( inputRequestedRegion );
         return;
     }
-    
+
     template <class TInputImage, class TOutputImage>
     void OtsuStatistics<TInputImage, TOutputImage>
     ::BeforeThreadedGenerateData( void )
@@ -74,15 +78,10 @@ namespace itk
         m_ThreadMax.SetSize( this->GetNumberOfThreads() );
         m_ThreadMax.Fill( itk::NumericTraits<double>::min() );
     }
-    
+
     template <class TInputImage, class TOutputImage>
-#if ITK_VERSION_MAJOR < 4
-    void OtsuStatistics<TInputImage, TOutputImage>
-    ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, int threadId )
-#else
     void OtsuStatistics<TInputImage, TOutputImage>
     ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, ThreadIdType threadId )
-#endif
     {
         // Boundary conditions for this filter; Neumann conditions are fine
         ZeroFluxNeumannBoundaryCondition<InputImageType> nbc;
@@ -106,7 +105,7 @@ namespace itk
             unsigned int nBaselines = m_Indicator.GetSize();
             // Get the normalization fator depending on the mode of operation:
             double factor;
-            
+
             switch( m_Mode ){
                 case USE_AVERAGED_GRADIENTS:
                     factor = 1.0f / (double)m_Channels;
@@ -128,7 +127,7 @@ namespace itk
             for( bit.GoToBegin(), it.GoToBegin(); !bit.IsAtEnd(); ++bit, ++it ){
                 // Depending on the mode of operation, take the center pixel or the whole vicinity:
                 double averagedValue = itk::NumericTraits<float>::Zero;
-                
+
                 switch( m_Mode ){
                     case USE_AVERAGED_GRADIENTS:
                         for( unsigned int k = 0; k < m_Channels; ++k )
@@ -166,14 +165,14 @@ namespace itk
             // ===========================================================================================================================
         }
     }
-    
+
     template <class TInputImage, class TOutputImage>
     void OtsuStatistics<TInputImage, TOutputImage>
     ::AfterThreadedGenerateData( void )
     {
         m_Min = itk::NumericTraits<double>::max();
         m_Max = itk::NumericTraits<double>::min();
-        for( int k = 0; k < this->GetNumberOfThreads(); ++k )
+        for( ThreadIdType k = 0; k < this->GetNumberOfThreads(); ++k )
         {
             if( m_ThreadMin[k] < m_Min )
             {
@@ -185,7 +184,7 @@ namespace itk
             }
         }
     }
-    
+
     /** Standard "PrintSelf" method */
     template <class TInputImage, class TOutput>
     void OtsuStatistics<TInputImage, TOutput>
@@ -199,7 +198,7 @@ namespace itk
         os << indent << "Max: "                                << m_Max                                << std::endl;
         os << indent << "Indicator: "                          << m_Indicator                          << std::endl;
     }
-    
+
 } // end namespace itk
 
 #endif
