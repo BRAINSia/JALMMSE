@@ -9,8 +9,8 @@
   Copyright (c) Insight Software Consortium. All rights reserved.
   See ITKCopyright.txt or http://www.itk.org/HTML/Copyright.htm for details.
 
-     This software is distributed WITHOUT ANY WARRANTY; without even 
-     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
+     This software is distributed WITHOUT ANY WARRANTY; without even
+     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
      PURPOSE.  See the above copyright notices for more information.
 
 =========================================================================*/
@@ -33,7 +33,7 @@ CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
     m_ProjectionCoordinate = 0;
     m_CorrectionFactor = 1;
 }
-      
+
 template< class TInputImage, class TOutputImage >
 void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
 ::BeforeThreadedGenerateData( void )
@@ -50,7 +50,7 @@ void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
         itkExceptionMacro( << "The projection coordinate exceeds the maximum dimension of the image" );
     if( m_DWI.GetSize() > this->GetInput()->GetVectorLength() )
         itkExceptionMacro( << "The number of gradients is larger than the actual number of channels in the volume!!!" );
-        
+
     /** In case all these things succeeded, compute the weights:*/
     double norm = itk::NumericTraits<double>::Zero; // For normalization purposes
     m_Weights.resize( m_DWI.GetSize() );
@@ -61,17 +61,17 @@ void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
     /** Normalize the weights so that they sum up to 1 */
     for( unsigned int k=0; k<m_DWI.GetSize(); ++k )
         m_Weights[k] /= norm;
-        
+
     /** Update the correction factor to apply to the original std of noise in the
     DWI image to compute the std of noise in the projected image:
          // NOTE: if the weights are w_i, we estimate the variance is
          // sum_i w_i^2 sigma^2, with sigma the original std of noise in
          // the complex domain of the x-space. This is not strictly valid
-         // since we have Rician (not Gaussian) noise and the std is a 
+         // since we have Rician (not Gaussian) noise and the std is a
          // function of the mean. This approximation is only valid for
          // high SNR.
          //
-         // HOWEVER: in the large SNR limit (A>>sigma), the noise is 
+         // HOWEVER: in the large SNR limit (A>>sigma), the noise is
          // almost Gaussian and sigma_Rician \simeq sigam_Gaussian. In
          // the low SNR case (A<<sigma), the noise is almost Rayleigh
          // and sigma_Rician \simeq sqrt((4-pi)/2)*sigma_Gaussian
@@ -97,29 +97,25 @@ void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
 ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, ThreadIdType itkNotUsed(threadId) )
 #endif
 {
-   // Iterators:
-   ImageRegionConstIterator<InputImageType>        bit;  // Iterator for the input image
-   ImageRegionIterator<OutputImageType>            it;   // Iterator for the output image
-   
    // Input and output
    InputImageConstPointer   input   =  this->GetInput();
    OutputImagePointer       output  =  this->GetOutput();
-   
-   bit = ImageRegionConstIterator<InputImageType>( input,  outputRegionForThread );
-   it  = ImageRegionIterator<OutputImageType>(     output, outputRegionForThread );
-   
-   for( bit.GoToBegin(),it.GoToBegin(); !bit.IsAtEnd(); ++bit,++it ){
-      InputPixelType input = bit.Get();
-      double output = itk::NumericTraits<double>::Zero;
+
+   ImageRegionConstIterator<InputImageType>        bit = ImageRegionConstIterator<InputImageType>( input,  outputRegionForThread );
+   ImageRegionIterator<OutputImageType>            it  = ImageRegionIterator<OutputImageType>(     output, outputRegionForThread );
+
+   for( bit.GoToBegin(),it.GoToBegin(); !bit.IsAtEnd(); ++bit,++it )
+   {
+      const InputPixelType & inputPixel = bit.Get();
+      double outputPixel = itk::NumericTraits<double>::Zero;
       for( unsigned int j=0; j<m_DWI.GetSize(); ++j )
-         output += ( m_Weights[j] ) * ( input[ m_DWI[j] ] );
-      it.Set( static_cast<OutputPixelType>(output) );
+        {
+        outputPixel += ( m_Weights[j] ) * ( inputPixel[ m_DWI[j] ] );
+        }
+      it.Set( static_cast<OutputPixelType>(outputPixel) );
    }
 }
-   
 
-   
 } // end namespace itk
-
 
 #endif
