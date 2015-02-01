@@ -6,7 +6,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/Common.cmake)
 
 
 ################################################################################
-
+#-----------------------------------------------------------------------------
+find_package(SlicerExecutionModel REQUIRED GenerateCLP)
+include(${GenerateCLP_USE_FILE})
+include(${SlicerExecutionModel_USE_FILE})
+include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 
 #-----------------------------------------------------------------------------
 find_package(ITK REQUIRED)
@@ -18,14 +22,6 @@ include(${ITK_USE_FILE})
 if(ITK_VERSION_MAJOR LESS 4)
     set(ITK_LIBRARIES ITKIO ITKNumerics ITKStatistics ITKAlgorithms ITKBasicFilters)
 endif(ITK_VERSION_MAJOR LESS 4)
-
-#-----------------------------------------------------------------------------
-find_package(SlicerExecutionModel REQUIRED GenerateCLP)
-include(${GenerateCLP_USE_FILE})
-include(${SlicerExecutionModel_USE_FILE})
-include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
-
-
 
 #-----------------------------------------------------------------------------
 enable_testing()
