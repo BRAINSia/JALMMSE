@@ -36,13 +36,8 @@ namespace itk
     }
     
     template <class TInputImage, class TOutputImage>
-#if ITK_VERSION_MAJOR < 4
-    void ComputeRestrictedHistogram<TInputImage, TOutputImage>
-    ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, int threadId )
-#else
     void ComputeRestrictedHistogram<TInputImage, TOutputImage>
     ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread, ThreadIdType threadId )
-#endif
     {
         // Allocate input:
         typename InputImageType::ConstPointer input  = this->GetInput();

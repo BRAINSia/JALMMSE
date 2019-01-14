@@ -70,16 +70,9 @@ namespace itk
     }
     
     template <class TInputImage, class TOutputImage>
-#if ITK_VERSION_MAJOR < 4
-    void VectorLocalStdImageFilter<TInputImage, TOutputImage>
-    ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread,
-                           int threadId )
-#else
     void VectorLocalStdImageFilter<TInputImage, TOutputImage>
     ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread,
                            ThreadIdType threadId )
-    
-#endif
     {
         // Input and output
         InputImageConstPointer input   =  this->GetInput();
@@ -91,8 +84,6 @@ namespace itk
         
         itk::ZeroFluxNeumannBoundaryCondition<InputImageType> nbc;
         
-#if ITK_VERSION_MAJOR < 4
-#else
         typedef typename itk::NeighborhoodAlgorithm::ImageBoundaryFacesCalculator<InputImageType>::FaceListType FaceListType;
         typedef typename FaceListType::iterator                                                                 FaceIteratorType;
         typedef typename itk::NeighborhoodAlgorithm::ImageBoundaryFacesCalculator<InputImageType>               FaceCalculatorType;
@@ -100,20 +91,12 @@ namespace itk
         FaceCalculatorType faceCalculator;
         FaceListType       faceList = faceCalculator( input, outputRegionForThread, m_Radius );
         FaceIteratorType   faceIterator;
-#endif
+
         double        cumsum = itk::NumericTraits<double>::Zero;
         unsigned long counts = 0;
         
-#if ITK_VERSION_MAJOR < 4
-        /** In ITKv3 the corners of the outputRegionForThread are processed
-         twice!!! :-(. This is the reason why I need this clause to ensure
-         exactly the same behavior in ITKv3 and ITKv4 */
-        for( unsigned int k=0; k<1; ++k ){
-            OutputImageRegionType currentRegion = outputRegionForThread;
-#else
         for( faceIterator=faceList.begin(); faceIterator!=faceList.end(); ++faceIterator ){
             OutputImageRegionType currentRegion = *faceIterator;
-#endif
             bit = itk::ConstNeighborhoodIterator<InputImageType>( m_Radius, input,  currentRegion );
             it  = itk::ImageRegionIterator<OutputImageType>(                output, currentRegion );
             if( m_Mask ){

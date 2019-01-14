@@ -261,18 +261,9 @@ namespace itk
      of the voxel being studied.
      */
     template <class TInputImage, class TOutputImage>
-#if ITK_VERSION_MAJOR < 4
-    void LMMSEVectorImageFilter<TInputImage, TOutputImage>
-    /*::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread,
-                           int itkNotUsed(threadId) )*/
-    ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread,
-                           int itkNotUsed(threadId) )
-#else
     void LMMSEVectorImageFilter<TInputImage, TOutputImage>
     ::ThreadedGenerateData( const OutputImageRegionType& outputRegionForThread,
                            ThreadIdType itkNotUsed(threadId) )
-    
-#endif
     {
         //==================================================================================================================================
         // Iterators:

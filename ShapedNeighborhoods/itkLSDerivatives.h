@@ -86,13 +86,7 @@ protected:
 	LSDerivativesL0();
 	virtual ~LSDerivativesL0() {}
 	// Threaded filter!
-#if ITK_VERSION_MAJOR < 4
-    void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int threadId );
-    
-#else
-    void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
-    
-#endif
+        void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 	void BeforeThreadedGenerateData() ITK_OVERRIDE;
 	void GenerateInputRequestedRegion() ITK_OVERRIDE;
 private:
@@ -146,13 +140,7 @@ private:
 		LSDerivativesL1();
 		virtual ~LSDerivativesL1() {}
 		// Threaded filter!
-#if ITK_VERSION_MAJOR < 4
-        void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int threadId );
-        
-#else
-        void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
-        
-#endif
+                void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 		void BeforeThreadedGenerateData() ITK_OVERRIDE;
 		void GenerateInputRequestedRegion() ITK_OVERRIDE;
 	private:
@@ -206,13 +194,7 @@ private:
 		LSDerivativesL2();
 		virtual ~LSDerivativesL2() {}
 		// Threaded filter!
-#if ITK_VERSION_MAJOR < 4
-        void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int threadId );
-        
-#else
-        void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
-        
-#endif
+                void ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 		void BeforeThreadedGenerateData() ITK_OVERRIDE;
 		void GenerateInputRequestedRegion() ITK_OVERRIDE;
 	private:
@@ -221,7 +203,6 @@ private:
 		unsigned int m_Radius;
 		unsigned int m_Coordinate;
 	};
-
 
  
 } // end namespace itk
