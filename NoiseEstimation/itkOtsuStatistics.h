@@ -92,22 +92,22 @@ protected:
   virtual ~OtsuStatistics()
   {
   }
-  void PrintSelf(std::ostream& os, Indent indent) const;
+  void PrintSelf(std::ostream& os, Indent indent) const ITK_OVERRIDE;
 
   // Threaded filter!
-  void BeforeThreadedGenerateData( void );
+  void BeforeThreadedGenerateData( void ) ITK_OVERRIDE;
 
 #if ITK_VERSION_MAJOR < 4
   void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
 
 #else
-  void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId );
+  void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 
 #endif
-  void AfterThreadedGenerateData( void );
+  void AfterThreadedGenerateData( void ) ITK_OVERRIDE;
 
   virtual void GenerateInputRequestedRegion()
-  throw (InvalidRequestedRegionError);
+  throw (InvalidRequestedRegionError) ITK_OVERRIDE;
 
 private:
   OtsuStatistics(const Self &);  // purposely not implemented

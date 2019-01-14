@@ -12,7 +12,7 @@
 
 #include "itkImageRegionConstIterator.h"
 #include "itkImageRegionIterator.h"
-#include "vnl/vnl_math.h"
+#include "itkMath.h"
 
 #if ITK_VERSION_MAJOR < 4
   typedef int ThreadIdType;
@@ -36,9 +36,14 @@ namespace itk
     void OtsuThreshold<TInputImage, TOutputImage>
     ::BeforeThreadedGenerateData( void )
     {
+#if ITK_VERSION_MAJOR >= 5
+        m_ThreadHist.SetSize( this->GetNumberOfWorkUnits(), m_Bins );
+        m_ThreadCount.SetSize( this->GetNumberOfWorkUnits() );
+#else
         m_ThreadHist.SetSize( this->GetNumberOfThreads(), m_Bins );
-        m_ThreadHist.Fill( 0.0f );
         m_ThreadCount.SetSize( this->GetNumberOfThreads() );
+#endif
+        m_ThreadHist.Fill( 0.0f );
         m_ThreadCount.Fill(0.0f);
     }
 
@@ -74,13 +79,21 @@ namespace itk
     {
         double totalSamples = itk::NumericTraits<double>::Zero;
 
+#if ITK_VERSION_MAJOR >= 5
+        for( ThreadIdType k = 0; k < this->GetNumberOfWorkUnits(); ++k )
+#else
         for( ThreadIdType k = 0; k < this->GetNumberOfThreads(); ++k )
+#endif
         {
             totalSamples += m_ThreadCount[k];
         }
         for( unsigned int b = 0; b < m_Bins; ++b )
         {
+#if ITK_VERSION_MAJOR >= 5
+            for( ThreadIdType k = 1; k < this->GetNumberOfWorkUnits(); ++k )
+#else
             for( ThreadIdType k = 1; k < this->GetNumberOfThreads(); ++k )
+#endif
             {
                 m_ThreadHist[0][b] += m_ThreadHist[k][b];
             }

@@ -78,7 +78,7 @@ protected:
   void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
 
 #else
-  void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId );
+  void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 
 #endif
   // Override Modified() method to fix the ready variable:
@@ -89,9 +89,9 @@ protected:
   }
 
   using itk::Object::Modified;
-  void BeforeThreadedGenerateData();
+  void BeforeThreadedGenerateData() ITK_OVERRIDE;
 
-  void AfterThreadedGenerateData();
+  void AfterThreadedGenerateData() ITK_OVERRIDE;
 
 private:
   ComputeRestrictedHistogram(const Self &); // purposely not implemented

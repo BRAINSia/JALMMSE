@@ -115,10 +115,10 @@ namespace itk
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
         
 #else
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId );
+        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
         
 #endif
-        void BeforeThreadedGenerateData( void );
+        void BeforeThreadedGenerateData( void ) ITK_OVERRIDE;
     private:
         CreateRGBProjectionsFromDWI(const Self&); // purposely not implemented
         void operator=(const Self&);              // purposely not implemented
