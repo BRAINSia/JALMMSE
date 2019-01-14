@@ -12,7 +12,7 @@
 
 #include "itkImageRegionConstIteratorWithIndex.h"
 #include "itkImageRegionIterator.h"
-#include "vnl/vnl_math.h"
+#include "itkMath.h"
 
 /** &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 // COMMENT THIS LINE TO AVOID THE DENUG CODE
@@ -327,7 +327,7 @@ namespace itk
         }
         // This constant is used to assess the theoretical self-similarity of
         // the central pixel to avoid over-weighting:
-        double centerSelfSimilarity = vcl_exp( -itk::NumericTraits<double>::One / m_H );
+        double centerSelfSimilarity = std::exp( -itk::NumericTraits<double>::One / m_H );
         //==================================================================================================================================
         // CREATE THE ITERATORS:
         mitx = ImageRegionConstIteratorWithIndex<FeaturesMapType>( m_Featuresx, outputRegionForThread );
@@ -488,7 +488,7 @@ namespace itk
                     weightz += (centerz.LHL-valuez.LHL)*(valuez.LHL-centerz.LHL)*lsnorm[1];
                     weightz += (centerz.LLH-valuez.LLH)*(valuez.LLH-centerz.LLH)*lsnorm[2];
                     weightz *= normNoisez;
-                    weight   = vcl_exp( (weightx+weighty+weightz)/3 );
+                    weight   = std::exp( (weightx+weighty+weightz)/3 );
                     norm    += weight;
                 }
                 else{
@@ -689,7 +689,7 @@ namespace itk
                 // Compute the square root of the output, and check if the result is physically consisitent:
                 for( unsigned int ch=0; ch<this->GetInput()->GetVectorLength(); ++ch ){
                     if( dFiltered[ch] > 0 )
-                        dFiltered[ch] = vcl_sqrt( dFiltered[ch] );
+                        dFiltered[ch] = std::sqrt( dFiltered[ch] );
                     else
                         dFiltered[ch] = 0;
                 }
@@ -698,7 +698,7 @@ namespace itk
                 for( unsigned int ch=0; ch<this->GetInput()->GetVectorLength(); ++ch ){
                     dFiltered[ch] = dSecondAveragedMoment[ch];
                     if( dFiltered[ch]>0 )
-                        dFiltered[ch] = vcl_sqrt(dFiltered[ch]);
+                        dFiltered[ch] = std::sqrt(dFiltered[ch]);
                     else
                         dFiltered[ch] = itk::NumericTraits<double>::Zero;
                 }

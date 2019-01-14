@@ -54,7 +54,7 @@ namespace itk
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
         
 #else
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId );
+        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
         
 #endif
         

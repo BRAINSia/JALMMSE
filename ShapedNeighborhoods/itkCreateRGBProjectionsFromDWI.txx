@@ -55,7 +55,7 @@ void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
     double norm = itk::NumericTraits<double>::Zero; // For normalization purposes
     m_Weights.resize( m_DWI.GetSize() );
     for( unsigned int k=0; k<m_DWI.GetSize(); ++k ){
-        m_Weights[k] = vcl_abs( m_GradientsTable[k][ m_ProjectionCoordinate ] );
+        m_Weights[k] = std::abs( m_GradientsTable[k][ m_ProjectionCoordinate ] );
         norm += m_Weights[k];
     }
     /** Normalize the weights so that they sum up to 1 */
@@ -83,7 +83,7 @@ void CreateRGBProjectionsFromDWI< TInputImage, TOutputImage >
     m_CorrectionFactor = itk::NumericTraits<float>::Zero;
     for( unsigned int k=0; k<m_DWI.GetSize(); ++k )
         m_CorrectionFactor += ( m_Weights[k] * m_Weights[k] );
-    m_CorrectionFactor = vcl_sqrt(m_CorrectionFactor);
+    m_CorrectionFactor = std::sqrt(m_CorrectionFactor);
     // Ready to go!
 }
 

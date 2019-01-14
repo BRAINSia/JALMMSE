@@ -70,7 +70,11 @@ namespace itk
         this->Superclass::BeforeThreadedGenerateData();
         if( m_Bins<128 )
             m_Bins = 128;
+#if ITK_VERSION_MAJOR >= 5
+        unsigned int k = this->GetNumberOfWorkUnits();
+#else
         unsigned int k = this->GetNumberOfThreads();
+#endif
         m_THist.SetSize( k, m_Bins );
         m_THist.Fill( 0 );
     }
@@ -79,7 +83,11 @@ namespace itk
     void ComputeRestrictedHistogram<TInputImage, TOutputImage>
     ::AfterThreadedGenerateData()
     {
+#if ITK_VERSION_MAJOR >= 5
+        unsigned int  k = this->GetNumberOfWorkUnits();
+#else
         unsigned int  k = this->GetNumberOfThreads();
+#endif
         unsigned long max    = 0;
         unsigned int  maxPos = 0;
         
@@ -97,7 +105,7 @@ namespace itk
         double* window = new double[2*R+1]; // This mimicks matlab's gausswin
         double norm   = itk::NumericTraits<double>::Zero;
         for( int r=-((int)R); r<=((int)R); ++r ){
-            window[(unsigned int)(r+(int)R)] = vcl_exp( -3.125 * (double)(r*r) / (double)(R*R)  );
+            window[(unsigned int)(r+(int)R)] = std::exp( -3.125 * (double)(r*r) / (double)(R*R)  );
             norm += window[(unsigned int)(r+(int)R)];
         }
         for( unsigned int r=0; r<2*R+1; ++r )

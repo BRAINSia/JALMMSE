@@ -24,8 +24,13 @@ namespace itk
     {
         m_Mask = NULL;
         m_Radius.Fill(1);
+#if ITK_VERSION_MAJOR >= 5
+        m_PerThreadSum.SetSize( this->GetNumberOfWorkUnits() );
+        m_PerThreadCount.SetSize( this->GetNumberOfWorkUnits() );
+#else
         m_PerThreadSum.SetSize( this->GetNumberOfThreads() );
         m_PerThreadCount.SetSize( this->GetNumberOfThreads() );
+#endif
         m_LocalStdMean = itk::NumericTraits<double>::Zero;
     }
     
@@ -33,9 +38,14 @@ namespace itk
     void VectorLocalStdImageFilter<TInputImage, TOutputImage>
     ::BeforeThreadedGenerateData( void )
     {
+#if ITK_VERSION_MAJOR >= 5
+        m_PerThreadSum.SetSize( this->GetNumberOfWorkUnits() );
+        m_PerThreadCount.SetSize( this->GetNumberOfWorkUnits() );
+#else
         m_PerThreadSum.SetSize( this->GetNumberOfThreads() );
-        m_PerThreadSum.Fill( itk::NumericTraits<double>::Zero );
         m_PerThreadCount.SetSize( this->GetNumberOfThreads() );
+#endif
+        m_PerThreadSum.Fill( itk::NumericTraits<double>::Zero );
         m_PerThreadCount.Fill( itk::NumericTraits<unsigned long>::Zero );
         this->Superclass::BeforeThreadedGenerateData();
     }
@@ -46,7 +56,11 @@ namespace itk
     {
         double        cumsum = itk::NumericTraits<double>::Zero;
         unsigned long counts = 0;
+#if ITK_VERSION_MAJOR >= 5
+        for( unsigned int k=0; k<(unsigned int)(this->GetNumberOfWorkUnits()); ++k ){
+#else
         for( unsigned int k=0; k<(unsigned int)(this->GetNumberOfThreads()); ++k ){
+#endif
             cumsum += m_PerThreadSum[k];
             counts += m_PerThreadCount[k];
         }
@@ -143,7 +157,7 @@ namespace itk
                         value  = ( static_cast<double>(sqavg[g]) - static_cast<double>((avg[g])*(avg[g]))/static_cast<double>(N) );
                         value /= static_cast<double>(N-1);
                         if( value>itk::NumericTraits<double>::Zero )
-                            value = vcl_sqrt( value );
+                            value = std::sqrt( value );
                         value = this->ComputeStdCorrection( mean, value );
                     }
                     sqavg[g]  = static_cast<OutputScalarType>(value);

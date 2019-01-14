@@ -75,11 +75,11 @@ namespace itk
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
         
 #else
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId );
+        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
         
 #endif
-        void BeforeThreadedGenerateData(void);
-        void AfterThreadedGenerateData(void);
+        void BeforeThreadedGenerateData(void) ITK_OVERRIDE;
+        void AfterThreadedGenerateData(void) ITK_OVERRIDE;
         double ComputeStdCorrection( const double, const double ) const;
         
     private:

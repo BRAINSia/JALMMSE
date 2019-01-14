@@ -16,7 +16,7 @@
 #include "itkNeighborhoodAlgorithm.h"
 #include "itkZeroFluxNeumannBoundaryCondition.h"
 #include "itkOffset.h"
-#include "vnl/vnl_math.h"
+#include "itkMath.h"
 
 #if ITK_VERSION_MAJOR < 4
     typedef int ThreadIdType;
@@ -73,9 +73,14 @@ namespace itk
     void OtsuStatistics<TInputImage, TOutputImage>
     ::BeforeThreadedGenerateData( void )
     {
+#if ITK_VERSION_MAJOR >= 5
+        m_ThreadMin.SetSize( this->GetNumberOfWorkUnits() );
+        m_ThreadMax.SetSize( this->GetNumberOfWorkUnits() );
+#else
         m_ThreadMin.SetSize( this->GetNumberOfThreads() );
-        m_ThreadMin.Fill( itk::NumericTraits<double>::max() );
         m_ThreadMax.SetSize( this->GetNumberOfThreads() );
+#endif
+        m_ThreadMin.Fill( itk::NumericTraits<double>::max() );
         m_ThreadMax.Fill( itk::NumericTraits<double>::min() );
     }
 
@@ -172,7 +177,11 @@ namespace itk
     {
         m_Min = itk::NumericTraits<double>::max();
         m_Max = itk::NumericTraits<double>::min();
+#if ITK_VERSION_MAJOR >= 5
+        for( ThreadIdType k = 0; k < this->GetNumberOfWorkUnits(); ++k )
+#else
         for( ThreadIdType k = 0; k < this->GetNumberOfThreads(); ++k )
+#endif
         {
             if( m_ThreadMin[k] < m_Min )
             {
