@@ -111,13 +111,7 @@ namespace itk
     protected:
         CreateRGBProjectionsFromDWI();
         virtual ~CreateRGBProjectionsFromDWI() {}
-#if ITK_VERSION_MAJOR < 4
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
-        
-#else
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
-        
-#endif
         void BeforeThreadedGenerateData( void ) ITK_OVERRIDE;
     private:
         CreateRGBProjectionsFromDWI(const Self&); // purposely not implemented

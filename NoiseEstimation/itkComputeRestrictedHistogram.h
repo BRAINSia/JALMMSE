@@ -74,13 +74,8 @@ protected:
   virtual ~ComputeRestrictedHistogram()
   {
   }
-#if ITK_VERSION_MAJOR < 4
-  void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
-
-#else
   void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
 
-#endif
   // Override Modified() method to fix the ready variable:
   void Modified()
   {

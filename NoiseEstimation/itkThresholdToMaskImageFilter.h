@@ -50,13 +50,7 @@ namespace itk
     protected:
         ThresholdToMaskImageFilter();
         virtual ~ThresholdToMaskImageFilter(){}
-#if ITK_VERSION_MAJOR < 4
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
-        
-#else
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
-        
-#endif
         
     private:
         // bool ComputeInverseMatrix( const double* measures, const double* squaredAverages, double normal, double* whitened )

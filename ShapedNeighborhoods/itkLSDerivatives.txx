@@ -191,13 +191,8 @@ void LSDerivativesL2< ImageDimension >
 //=====================================================================================================	
 
 template< class TInputImage >
-#if ITK_VERSION_MAJOR < 4
-void LSDerivativesL0< TInputImage >
-::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int itkNotUsed(threadId) )
-#else
 void LSDerivativesL0< TInputImage >
 ::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType itkNotUsed(threadId) )
-#endif
 {
 	// Boundary conditions for this filter; Neumann conditions are fine
 	ZeroFluxNeumannBoundaryCondition<InputImageType> nbc;	
@@ -272,13 +267,8 @@ void LSDerivativesL0< TInputImage >
 //=====================================================================================================
 //=====================================================================================================
 template< unsigned int ImageDimension >
-#if ITK_VERSION_MAJOR < 4
-void LSDerivativesL1< ImageDimension >
-::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int itkNotUsed(threadId) )
-#else
 void LSDerivativesL1< ImageDimension >
 ::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType itkNotUsed(threadId) )
-#endif
 {
 	// Boundary conditions for this filter; Neumann conditions are fine
 	ZeroFluxNeumannBoundaryCondition<InputImageType> nbc;	
@@ -355,15 +345,8 @@ void LSDerivativesL1< ImageDimension >
 //=====================================================================================================
 //=====================================================================================================	
 template< unsigned int ImageDimension >
-
-
-#if ITK_VERSION_MAJOR < 4
-void LSDerivativesL2< ImageDimension >
-::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, int itkNotUsed(threadId) )
-#else
 void LSDerivativesL2< ImageDimension >
 ::ThreadedGenerateData( const OutputRegionType& outputRegionForThread, ThreadIdType itkNotUsed(threadId) )
-#endif
 {
 	// Boundary conditions for this filter; Neumann conditions are fine
 	ZeroFluxNeumannBoundaryCondition<InputImageType> nbc;	

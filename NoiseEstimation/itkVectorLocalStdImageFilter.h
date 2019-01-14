@@ -71,13 +71,8 @@ namespace itk
     protected:
         VectorLocalStdImageFilter();
         virtual ~VectorLocalStdImageFilter(){}
-#if ITK_VERSION_MAJOR < 4
-        void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, int threadId );
-        
-#else
         void ThreadedGenerateData( const OutputImageRegionType & outputRegionForThread, ThreadIdType threadId ) ITK_OVERRIDE;
         
-#endif
         void BeforeThreadedGenerateData(void) ITK_OVERRIDE;
         void AfterThreadedGenerateData(void) ITK_OVERRIDE;
         double ComputeStdCorrection( const double, const double ) const;

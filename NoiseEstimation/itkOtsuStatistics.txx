@@ -18,10 +18,6 @@
 #include "itkOffset.h"
 #include "itkMath.h"
 
-#if ITK_VERSION_MAJOR < 4
-    typedef int ThreadIdType;
-#endif
-
 namespace itk
 {
 

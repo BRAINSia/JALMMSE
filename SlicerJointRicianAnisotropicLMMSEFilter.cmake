@@ -19,10 +19,6 @@ if(Slicer_BUILD_BRAINSTOOLS)
 endif()
 include(${ITK_USE_FILE})
 
-if(ITK_VERSION_MAJOR LESS 4)
-    set(ITK_LIBRARIES ITKIO ITKNumerics ITKStatistics ITKAlgorithms ITKBasicFilters)
-endif(ITK_VERSION_MAJOR LESS 4)
-
 #-----------------------------------------------------------------------------
 enable_testing()
 include(CTest)
